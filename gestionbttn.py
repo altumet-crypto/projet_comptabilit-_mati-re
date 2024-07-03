@@ -30,10 +30,13 @@ def ouvrir_fenetre_principale():
     fenetre_principale.geometry("500x400")
     fenetre_principale.configure(bg="#ffffff")
 
-    btn_matiere = ttk.Button(fenetre_principale, text="Matière", width=20, command=ouvrir_fenetre_article)
+    btn_matiere = ttk.Button(fenetre_principale, text="Article", width=20, command=ouvrir_fenetre_article)
     btn_matiere.pack(pady=10)
 
     btn_solde = ttk.Button(fenetre_principale, text="Solde", width=20, command=ouvrir_fenetre_solde)
+    btn_solde.pack(pady=10)
+
+    btn_solde = ttk.Button(fenetre_principale, text="Bon", width=20)
     btn_solde.pack(pady=10)
 
     btn_entrees = ttk.Button(fenetre_principale, text="Entrées", width=20, command=ouvrir_fenetre_entrees)
@@ -59,10 +62,10 @@ def ouvrir_fenetre_article():
     btn_ajouter = ttk.Button(fenetre_article, text="Ajouter article", width=20, command=ouvrir_fenetre_ajout_article)
     btn_ajouter.pack(pady=10)
 
-    btn_modifier = ttk.Button(fenetre_article, text="Modifier article", width=20)
+    btn_modifier = ttk.Button(fenetre_article, text="Modifier article", width=20, command=ouvrir_fenetre_modification)
     btn_modifier.pack(pady=10)
 
-    btn_supprimer = ttk.Button(fenetre_article, text="Supprimer article", width=20)
+    btn_supprimer = ttk.Button(fenetre_article, text="Supprimer article", width=20, command=ouvrir_fenetre_suppression)
     btn_supprimer.pack(pady=10)
 
     btn_consulter = ttk.Button(fenetre_article, text="Consulter les articles", width=20, command=consulter_articles)
@@ -93,7 +96,6 @@ def ouvrir_fenetre_ajout_article():
     tree.heading("Désignation", text="Désignation")
     tree.heading("Catégorie", text="Catégorie")
     tree.heading("LPC", text="LPC")
-
 
     tree.pack(side=tk.LEFT, padx=10, pady=10, expand=True, fill=tk.BOTH)
 
@@ -157,6 +159,32 @@ def ouvrir_fenetre_ajout_article():
         # Fermer la connexion à la base de données à la fin de l'application
         conn.close()
 
+    # Fonction pour charger les articles existants dans le tableau
+    def charger_articles(tree):
+        # Créer une connexion à la base de données SQLite
+        conn = sqlite3.connect('comptabilit_matiere.db')
+        cursor = conn.cursor()
+
+        # Supprimer les articles actuels du tableau
+        for item in tree.get_children():
+            tree.delete(item)
+
+        # Récupérer tous les articles de la base de données
+        cursor.execute("SELECT code_article, Designation, Categorie, LPC FROM Article")
+        articles = cursor.fetchall()
+
+        # Insérer les articles dans le tableau
+        for article in articles:
+            tree.insert("", tk.END, values=article)
+
+        # Fermer la connexion à la base de données
+        conn.close()
+
+    # Charger les articles existants lors de l'ouverture de la fenêtre
+    charger_articles(tree)
+
+   
+
     
 
 
@@ -175,6 +203,208 @@ def consulter_articles():
     tree.heading("categorie", text="Catégorie")
     tree.heading("lpc", text="LPC")
 
+    tree.pack(expand=True, fill=tk.BOTH, padx=20, pady=20)
+
+    # Fonction pour charger les articles depuis la base de données
+    def charger_articles(tree):
+        # Créer une connexion à la base de données SQLite
+        conn = sqlite3.connect('comptabilit_matiere.db')
+        cursor = conn.cursor()
+
+        # Supprimer les articles actuels du tableau
+        for item in tree.get_children():
+            tree.delete(item)
+
+        # Récupérer tous les articles de la base de données
+        cursor.execute("SELECT code_article, Designation, Categorie, LPC FROM Article")
+        articles = cursor.fetchall()
+
+        # Insérer les articles dans le tableau
+        for article in articles:
+            tree.insert("", tk.END, values=article)
+
+        # Fermer la connexion à la base de données
+        conn.close()
+
+    # Charger les articles existants lors de l'ouverture de la fenêtre
+    charger_articles(tree)
+
+
+# Fonction pour supprimer un article
+def ouvrir_fenetre_suppression():
+    fenetre_suppression = tk.Toplevel()
+    fenetre_suppression.title("Supprimer un Article")
+    fenetre_suppression.geometry("400x200")
+    fenetre_suppression.configure(bg="#ffffff")
+
+    # Label et combobox pour le code article
+    label_code = ttk.Label(fenetre_suppression, text="Code Article:")
+    label_code.pack(pady=10)
+    
+    # Créer un combobox pour les codes d'articles
+    combobox_code = ttk.Combobox(fenetre_suppression, width=30)
+    combobox_code.pack(pady=10)
+
+    # Charger les codes d'articles depuis la base de données
+    def charger_codes_articles():
+        # Créer une connexion à la base de données SQLite
+        conn = sqlite3.connect('comptabilit_matiere.db')
+        cursor = conn.cursor()
+
+        # Récupérer tous les codes d'articles de la base de données
+        cursor.execute("SELECT code_article FROM Article")
+        codes = [row[0] for row in cursor.fetchall()]
+
+        # Ajouter les codes au combobox
+        combobox_code['values'] = codes
+
+        # Fermer la connexion à la base de données
+        conn.close()
+
+    # Charger les codes d'articles existants lors de l'ouverture de la fenêtre
+    charger_codes_articles()
+
+    # Fonction pour supprimer l'article
+    def supprimer_article():
+        code_article = combobox_code.get()
+        if code_article:
+            # Créer une connexion à la base de données SQLite
+            conn = sqlite3.connect('comptabilit_matiere.db')
+            cursor = conn.cursor()
+            try:
+                # Supprimer l'article de la base de données
+                cursor.execute("DELETE FROM Article WHERE code_article = ?", (code_article,))
+                if cursor.rowcount == 0:
+                    messagebox.showwarning("Article non trouvé", "Aucun article trouvé avec ce code.")
+                else:
+                    conn.commit()
+                    messagebox.showinfo("Succès", f"L'article avec le code {code_article} a été supprimé.")
+                    # Mettre à jour les codes dans le combobox
+                    charger_codes_articles()
+            except sqlite3.Error as e:
+                messagebox.showerror("Erreur", f"Erreur lors de la suppression de l'article: {e}")
+            finally:
+                # Fermer la connexion à la base de données
+                conn.close()
+        else:
+            messagebox.showwarning("Champ vide", "Veuillez entrer un code article.")
+
+    # Bouton Supprimer
+    btn_supprimer = ttk.Button(fenetre_suppression, text="Supprimer", command=supprimer_article)
+    btn_supprimer.pack(pady=20)
+
+
+# Fonction pour modifier un article
+def ouvrir_fenetre_modification():
+    fenetre_modification = tk.Toplevel()
+    fenetre_modification.title("Modifier un Article")
+    fenetre_modification.geometry("400x300")
+    fenetre_modification.configure(bg="#ffffff")
+
+    # Label et combobox pour le code article
+    label_code = ttk.Label(fenetre_modification, text="Code Article:")
+    label_code.pack(pady=10)
+    
+    # Créer un combobox pour les codes d'articles
+    combobox_code = ttk.Combobox(fenetre_modification, width=30)
+    combobox_code.pack(pady=10)
+
+    # Charger les codes d'articles depuis la base de données
+    def charger_codes_articles():
+        # Créer une connexion à la base de données SQLite
+        conn = sqlite3.connect('comptabilit_matiere.db')
+        cursor = conn.cursor()
+
+        # Récupérer tous les codes d'articles de la base de données
+        cursor.execute("SELECT code_article FROM Article")
+        codes = [row[0] for row in cursor.fetchall()]
+
+        # Ajouter les codes au combobox
+        combobox_code['values'] = codes
+
+        # Fermer la connexion à la base de données
+        conn.close()
+
+    # Charger les codes d'articles existants lors de l'ouverture de la fenêtre
+    charger_codes_articles()
+
+    # Labels et champs de saisie pour les attributs
+    label_designation = ttk.Label(fenetre_modification, text="Désignation:")
+    label_designation.pack(pady=5)
+    entry_designation = ttk.Entry(fenetre_modification, width=30)
+    entry_designation.pack(pady=5)
+
+    label_categorie = ttk.Label(fenetre_modification, text="Catégorie:")
+    label_categorie.pack(pady=5)
+    entry_categorie = ttk.Entry(fenetre_modification, width=30)
+    entry_categorie.pack(pady=5)
+
+    label_lpc = ttk.Label(fenetre_modification, text="LPC:")
+    label_lpc.pack(pady=5)
+    entry_lpc = ttk.Entry(fenetre_modification, width=30)
+    entry_lpc.pack(pady=5)
+
+    # Fonction pour charger les détails de l'article sélectionné
+    def charger_details_article(event):
+        code_article = combobox_code.get()
+        if code_article:
+            # Créer une connexion à la base de données SQLite
+            conn = sqlite3.connect('comptabilit_matiere.db')
+            cursor = conn.cursor()
+
+            # Récupérer les détails de l'article
+            cursor.execute("SELECT Designation, Categorie, LPC FROM Article WHERE code_article = ?", (code_article,))
+            article = cursor.fetchone()
+
+            if article:
+                entry_designation.delete(0, tk.END)
+                entry_designation.insert(0, article[0])
+                entry_categorie.delete(0, tk.END)
+                entry_categorie.insert(0, article[1])
+                entry_lpc.delete(0, tk.END)
+                entry_lpc.insert(0, article[2])
+
+            # Fermer la connexion à la base de données
+            conn.close()
+
+    # Lier l'événement de sélection du combobox au chargement des détails
+    combobox_code.bind("<<ComboboxSelected>>", charger_details_article)
+
+    # Fonction pour modifier l'article
+    def modifier_article():
+        code_article = combobox_code.get()
+        designation = entry_designation.get()
+        categorie = entry_categorie.get()
+        lpc = entry_lpc.get()
+
+        if code_article and designation and categorie and lpc:
+            # Créer une connexion à la base de données SQLite
+            conn = sqlite3.connect('comptabilit_matiere.db')
+            cursor = conn.cursor()
+            try:
+                # Mettre à jour l'article dans la base de données
+                cursor.execute("UPDATE Article SET Designation = ?, Categorie = ?, LPC = ? WHERE code_article = ?",
+                               (designation, categorie, lpc, code_article))
+                conn.commit()
+                messagebox.showinfo("Succès", f"L'article avec le code {code_article} a été modifié.")
+                # Réinitialiser les champs de saisie après modification
+                entry_designation.delete(0, tk.END)
+                entry_categorie.delete(0, tk.END)
+                entry_lpc.delete(0, tk.END)
+                charger_codes_articles()
+            except sqlite3.Error as e:
+                messagebox.showerror("Erreur", f"Erreur lors de la modification de l'article: {e}")
+            finally:
+                # Fermer la connexion à la base de données
+                conn.close()
+        else:
+            messagebox.showwarning("Champs manquants", "Veuillez remplir tous les champs.")
+
+    # Bouton Modifier
+    btn_modifier = ttk.Button(fenetre_modification, text="Modifier", command=modifier_article)
+    btn_modifier.pack(pady=20)
+
+
     
 
 # Fonction pour ouvrir la fenêtre des soldes
@@ -190,11 +420,19 @@ def ouvrir_fenetre_solde():
 
     # Bouton Consulter solde
     btn_consulter = ttk.Button(frame_boutons, text="Consulter solde", width=20, command=consulter_solde)
-    btn_consulter.grid(row=0, column=0, padx=10, pady=10)
+    btn_consulter.pack(pady=10)
 
     # Bouton Ouvrir/Clôturer
     btn_ouvrir_cloturer = ttk.Button(frame_boutons, text="Ouvrir/Clôturer", width=20, command=ouvrir_cloturer)
-    btn_ouvrir_cloturer.grid(row=0, column=1, padx=10, pady=10)
+    btn_ouvrir_cloturer.pack(pady=10)
+
+    # Stock Magasin
+    btn_consulter = ttk.Button(frame_boutons, text="Stock Magasin", width=20)
+    btn_consulter.pack(pady=10)
+
+    # Bouton Stock REBUTE
+    btn_consulter = ttk.Button(frame_boutons, text="Stock Rebuté", width=20)
+    btn_consulter.pack(pady=10)
 
     fenetre_solde.mainloop()
 
