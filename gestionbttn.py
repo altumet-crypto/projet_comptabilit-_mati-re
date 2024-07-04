@@ -71,9 +71,7 @@ def ouvrir_fenetre_article():
     btn_consulter = ttk.Button(fenetre_article, text="Consulter les articles", width=20, command=consulter_articles)
     btn_consulter.pack(pady=10)
 
-    fenetre_article.mainloop()
-
-
+    
 
 
 
@@ -183,9 +181,6 @@ def ouvrir_fenetre_ajout_article():
     # Charger les articles existants lors de l'ouverture de la fenêtre
     charger_articles(tree)
 
-   
-
-    
 
 
 # Fonction pour consulter les articles
@@ -550,6 +545,7 @@ def ouvrir_fenetre_entrees():
     btn_ajouter = ttk.Button(frame_boutons, text="Ajouter entrée", width=20, command=afficher_fenetre_entrees)
     btn_ajouter.grid(row=0, column=1, padx=10, pady=10)
 
+# Fonction pour afficher les entrées et ajouter une nouvelle entrée
 def afficher_fenetre_entrees():
     fenetre_entrees = tk.Tk()
     fenetre_entrees.title("Gestion des Entrées")
@@ -557,18 +553,19 @@ def afficher_fenetre_entrees():
     fenetre_entrees.configure(bg="#ffffff")
 
     # Tableau pour afficher les données
-    columns = ("code_entre", "quantite_entre", "valeur_entre", "date", "code_article", "code_br")
+    columns = ("code_entre", "quantite_entre", "valeur_entre", "code_article", "frais_approches", "code_br", "jour", "mois", "annee")
     tree = ttk.Treeview(fenetre_entrees, columns=columns, show="headings")
 
     # Configuration des colonnes du tableau
     for col in columns:
         tree.heading(col, text=col.replace("_", " ").capitalize())
         tree.column(col, width=150)
+
     conn = sqlite3.connect("comptabilit_matiere.db")
     cursor = conn.cursor()
 
     # Charger les données de la base de données
-    cursor.execute("SELECT code_entre, quantite_entre, valeur_entre, date, code_article, code_br FROM Entree")
+    cursor.execute("SELECT code_entre, quantite_entre, valeur_entre, code_article, frais_approches, code_br, jour, mois, annee FROM Entree")
     entrees = cursor.fetchall()
 
     for entree in entrees:
@@ -581,7 +578,7 @@ def afficher_fenetre_entrees():
     frame_ajout.pack(side=tk.BOTTOM, fill=tk.X, padx=10, pady=10)
 
     # Labels et champs de saisie pour les attributs
-    labels_text = ["Code Entrée", "Quantité Entrée", "Valeur Entrée", "Date", "Code Article", "Code BR"]
+    labels_text = ["Code Entrée", "Quantité Entrée", "Valeur Entrée", "Code Article", "Frais d'approches", "Code BR", "Jour", "Mois", "Annee"]
     entries = {}
 
     for idx, text in enumerate(labels_text):
@@ -596,33 +593,35 @@ def afficher_fenetre_entrees():
         code_entre = entries["Code Entrée"].get()
         quantite_entre = entries["Quantité Entrée"].get()
         valeur_entre = entries["Valeur Entrée"].get()
-        date = entries["Date"].get()
         code_article = entries["Code Article"].get()
+        frais_approches = entries["Frais d'approches"].get()
         code_br = entries["Code BR"].get()
+        jour = entries["Jour"].get()
+        mois = entries["Mois"].get()
+        annee = entries["Annee"].get()
 
-        if code_entre and quantite_entre and valeur_entre and date and code_article and code_br:
+        if code_entre and quantite_entre and valeur_entre and code_article and frais_approches and code_br and jour and mois and annee:
             try:
                 conn = sqlite3.connect("comptabilit_matiere.db")
                 cursor = conn.cursor()
-                cursor.execute("INSERT INTO Entree (code_entre, quantite_entre, valeur_entre, date, code_article, code_br) VALUES (?, ?, ?, ?, ?, ?)",
-                               (code_entre, quantite_entre, valeur_entre, date, code_article, code_br))
+                cursor.execute("INSERT INTO Entree (code_entre, quantite_entre, valeur_entre, code_article, frais_approches, code_br, jour, mois, annee) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                               (code_entre, quantite_entre, valeur_entre, code_article, frais_approches, code_br, jour, mois, annee))
                 conn.commit()
                 # Ajouter l'entrée au tableau
-                tree.insert("", tk.END, values=(code_entre, quantite_entre, valeur_entre, date, code_article, code_br))
+                tree.insert("", tk.END, values=(code_entre, quantite_entre, valeur_entre, code_article, frais_approches, code_br, jour, mois, annee))
                 # Réinitialiser les champs de saisie après ajout
                 for entry in entries.values():
                     entry.delete(0, tk.END)
             except sqlite3.IntegrityError:
                 messagebox.showerror("Erreur", "Une entrée avec ce code existe déjà.")
+            finally:
+                conn.close()
         else:
             messagebox.showwarning("Champs manquants", "Veuillez remplir tous les champs.")
-    conn.close()
+
     # Bouton Ajouter
     btn_ajouter = ttk.Button(frame_ajout, text="Ajouter", command=ajouter_entree)
     btn_ajouter.grid(row=len(labels_text), column=0, columnspan=2, padx=10, pady=10)
-
- 
-
 
 
 # Création de la fenêtre de connexion
