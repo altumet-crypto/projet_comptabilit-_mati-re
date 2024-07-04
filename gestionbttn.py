@@ -460,7 +460,8 @@ def ouvrir_cloturer():
         if col > 2:  # Passer à la ligne suivante après 3 boutons
             col = 0
             row += 1
-
+# Suivi des boutons par mois
+buttons = []
 # Fonction pour basculer l'état d'un mois
 def toggle_mois(mois):
     if etat_mois[mois] == "Fermé":
