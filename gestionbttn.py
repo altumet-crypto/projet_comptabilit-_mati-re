@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
 import sqlite3
+from PIL import Image, ImageTk
 
 # État des mois (ouvert ou fermé)
 etat_mois = {mois: "Fermé" for mois in [
@@ -12,10 +13,10 @@ etat_mois = {mois: "Fermé" for mois in [
 def verifier_connexion():
     username = entry_username.get()
     password = entry_password.get()
-    if username == "admin" and password == "password":
+    if username == "" and password == "":
         ouvrir_fenetre_principale()
     else:
-        messagebox.showerror("Erreur de connexion", "Nom d'utilisateur ou mot de passe incorrect")
+        messagebox.showerror("Erreur de connexion", "Nom d'utilisateur ou mot de passe incorrect", parent=fenetre_connexion)
 
 # Fonction pour ouvrir la fenêtre principale après la connexion
 def ouvrir_fenetre_principale():
@@ -23,11 +24,13 @@ def ouvrir_fenetre_principale():
     fenetre_principale = tk.Tk()
     fenetre_principale.title("Fenêtre Principale")
 
+
+
     style = ttk.Style(fenetre_principale)
     style.configure("TButton", font=("Helvetica", 16), padding=20, background="#f0f0f0", foreground="#333333")
     style.map("TButton", background=[("active", "#e0e0e0")])
 
-    fenetre_principale.geometry("500x400")
+    fenetre_principale.geometry("800x800")
     fenetre_principale.configure(bg="#ffffff")
 
     btn_matiere = ttk.Button(fenetre_principale, text="Article", width=20, command=ouvrir_fenetre_article)
@@ -36,7 +39,7 @@ def ouvrir_fenetre_principale():
     btn_solde = ttk.Button(fenetre_principale, text="Solde", width=20, command=ouvrir_fenetre_solde)
     btn_solde.pack(pady=10)
 
-    btn_solde = ttk.Button(fenetre_principale, text="Bon", width=20)
+    btn_solde = ttk.Button(fenetre_principale, text="Bon", width=20, command=ouvrir_fenetre_bon)
     btn_solde.pack(pady=10)
 
     btn_entrees = ttk.Button(fenetre_principale, text="Entrées", width=20, command=ouvrir_fenetre_entrees)
@@ -47,7 +50,10 @@ def ouvrir_fenetre_principale():
 
     fenetre_principale.mainloop()
 
-# Fonction pour ouvrir la fenêtre des articles
+#############################    ARTICLES ARTICLES ARTICLES ######################################################### 
+
+ 
+
 def ouvrir_fenetre_article():
     fenetre_article = tk.Toplevel()
     fenetre_article.title("Gestion des Articles")
@@ -56,7 +62,7 @@ def ouvrir_fenetre_article():
     style.configure("TButton", font=("Helvetica", 16), padding=20, background="#f0f0f0", foreground="#333333")
     style.map("TButton", background=[("active", "#e0e0e0")])
 
-    fenetre_article.geometry("600x500")
+    fenetre_article.geometry("800x800")
     fenetre_article.configure(bg="#ffffff")
 
     btn_ajouter = ttk.Button(fenetre_article, text="Ajouter article", width=20, command=ouvrir_fenetre_ajout_article)
@@ -71,14 +77,31 @@ def ouvrir_fenetre_article():
     btn_consulter = ttk.Button(fenetre_article, text="Consulter les articles", width=20, command=consulter_articles)
     btn_consulter.pack(pady=10)
 
-    
+def charger_articles(tree):
+        # Créer une connexion à la base de données SQLite
+        conn = sqlite3.connect('comptabilit_matiere.db')
+        cursor = conn.cursor()
 
+        # Supprimer les articles actuels du tableau
+        for item in tree.get_children():
+            tree.delete(item)
+
+        # Récupérer tous les articles de la base de données
+        cursor.execute("SELECT code_article, Designation, Categorie, LPC FROM Article")
+        articles = cursor.fetchall()
+
+        # Insérer les articles dans le tableau
+        for article in articles:
+            tree.insert("", tk.END, values=article)
+
+        # Fermer la connexion à la base de données
+        conn.close()
 
 
 def ouvrir_fenetre_ajout_article():
     fenetre_ajout_article = tk.Toplevel()
     fenetre_ajout_article.title("Ajouter un Article")
-    fenetre_ajout_article.geometry("800x400")
+    fenetre_ajout_article.geometry("1200x800")
     fenetre_ajout_article.configure(bg="#ffffff")
 
     # Frame pour le tableau à gauche et les champs de saisie à droite
@@ -157,27 +180,7 @@ def ouvrir_fenetre_ajout_article():
         # Fermer la connexion à la base de données à la fin de l'application
         conn.close()
 
-    # Fonction pour charger les articles existants dans le tableau
-    def charger_articles(tree):
-        # Créer une connexion à la base de données SQLite
-        conn = sqlite3.connect('comptabilit_matiere.db')
-        cursor = conn.cursor()
-
-        # Supprimer les articles actuels du tableau
-        for item in tree.get_children():
-            tree.delete(item)
-
-        # Récupérer tous les articles de la base de données
-        cursor.execute("SELECT code_article, Designation, Categorie, LPC FROM Article")
-        articles = cursor.fetchall()
-
-        # Insérer les articles dans le tableau
-        for article in articles:
-            tree.insert("", tk.END, values=article)
-
-        # Fermer la connexion à la base de données
-        conn.close()
-
+    
     # Charger les articles existants lors de l'ouverture de la fenêtre
     charger_articles(tree)
 
@@ -187,7 +190,7 @@ def ouvrir_fenetre_ajout_article():
 def consulter_articles():
     fenetre_consulter = tk.Toplevel()
     fenetre_consulter.title("Liste des Articles")
-    fenetre_consulter.geometry("800x400")
+    fenetre_consulter.geometry("800x500")
     fenetre_consulter.configure(bg="#ffffff")
 
     columns = ("code", "designation", "categorie", "lpc")
@@ -200,27 +203,6 @@ def consulter_articles():
 
     tree.pack(expand=True, fill=tk.BOTH, padx=20, pady=20)
 
-    # Fonction pour charger les articles depuis la base de données
-    def charger_articles(tree):
-        # Créer une connexion à la base de données SQLite
-        conn = sqlite3.connect('comptabilit_matiere.db')
-        cursor = conn.cursor()
-
-        # Supprimer les articles actuels du tableau
-        for item in tree.get_children():
-            tree.delete(item)
-
-        # Récupérer tous les articles de la base de données
-        cursor.execute("SELECT code_article, Designation, Categorie, LPC FROM Article")
-        articles = cursor.fetchall()
-
-        # Insérer les articles dans le tableau
-        for article in articles:
-            tree.insert("", tk.END, values=article)
-
-        # Fermer la connexion à la base de données
-        conn.close()
-
     # Charger les articles existants lors de l'ouverture de la fenêtre
     charger_articles(tree)
 
@@ -229,7 +211,7 @@ def consulter_articles():
 def ouvrir_fenetre_suppression():
     fenetre_suppression = tk.Toplevel()
     fenetre_suppression.title("Supprimer un Article")
-    fenetre_suppression.geometry("400x200")
+    fenetre_suppression.geometry("800x500")
     fenetre_suppression.configure(bg="#ffffff")
 
     # Label et combobox pour le code article
@@ -237,7 +219,7 @@ def ouvrir_fenetre_suppression():
     label_code.pack(pady=10)
     
     # Créer un combobox pour les codes d'articles
-    combobox_code = ttk.Combobox(fenetre_suppression, width=30)
+    combobox_code = ttk.Combobox(fenetre_suppression, width=30, state="readonly")
     combobox_code.pack(pady=10)
 
     # Charger les codes d'articles depuis la base de données
@@ -270,10 +252,10 @@ def ouvrir_fenetre_suppression():
                 # Supprimer l'article de la base de données
                 cursor.execute("DELETE FROM Article WHERE code_article = ?", (code_article,))
                 if cursor.rowcount == 0:
-                    messagebox.showwarning("Article non trouvé", "Aucun article trouvé avec ce code.")
+                    messagebox.showwarning("Article non trouvé", "Aucun article trouvé avec ce code.",parent=ouvrir_fenetre_suppression)
                 else:
                     conn.commit()
-                    messagebox.showinfo("Succès", f"L'article avec le code {code_article} a été supprimé.")
+                    messagebox.showinfo("Succès", f"L'article avec le code {code_article} a été supprimé.",parent=ouvrir_fenetre_suppression)
                     # Mettre à jour les codes dans le combobox
                     charger_codes_articles()
             except sqlite3.Error as e:
@@ -293,7 +275,7 @@ def ouvrir_fenetre_suppression():
 def ouvrir_fenetre_modification():
     fenetre_modification = tk.Toplevel()
     fenetre_modification.title("Modifier un Article")
-    fenetre_modification.geometry("400x300")
+    fenetre_modification.geometry("800x500")
     fenetre_modification.configure(bg="#ffffff")
 
     # Label et combobox pour le code article
@@ -301,7 +283,7 @@ def ouvrir_fenetre_modification():
     label_code.pack(pady=10)
     
     # Créer un combobox pour les codes d'articles
-    combobox_code = ttk.Combobox(fenetre_modification, width=30)
+    combobox_code = ttk.Combobox(fenetre_modification, width=30, state="readonly")
     combobox_code.pack(pady=10)
 
     # Charger les codes d'articles depuis la base de données
@@ -400,13 +382,13 @@ def ouvrir_fenetre_modification():
     btn_modifier.pack(pady=20)
 
 
-    
+#############################    ARTICLES ARTICLES ARTICLES #########################################################  
 
-# Fonction pour ouvrir la fenêtre des soldes
+#############################    SOLDE SOLDE SOLDE    SOLDE  #########################################################  
 def ouvrir_fenetre_solde():
     fenetre_solde = tk.Toplevel()
     fenetre_solde.title("Gestion des Soldes")
-    fenetre_solde.geometry("400x200")
+    fenetre_solde.geometry("800x500")
     fenetre_solde.configure(bg="#ffffff")
 
     # Frame pour les boutons
@@ -429,7 +411,6 @@ def ouvrir_fenetre_solde():
     btn_consulter = ttk.Button(frame_boutons, text="Stock Rebuté", width=20)
     btn_consulter.pack(pady=10)
 
-    fenetre_solde.mainloop()
 
 # Liste pour stocker les boutons des mois
 buttons = []
@@ -439,8 +420,30 @@ def ouvrir_cloturer():
     global buttons  # Référence globale aux boutons des mois
     fenetre_ouvrir_cloturer = tk.Toplevel()
     fenetre_ouvrir_cloturer.title("Ouvrir/Clôturer les Soldes")
-    fenetre_ouvrir_cloturer.geometry("400x400")
+    fenetre_ouvrir_cloturer.geometry("800x500")
     fenetre_ouvrir_cloturer.configure(bg="#ffffff")
+
+    # Suivi des boutons par mois
+    buttons = []
+
+    # Fonction pour basculer l'état d'un mois
+    def toggle_mois(mois):
+        if etat_mois[mois] == "Fermé":
+            if messagebox.askyesno("Confirmation", f"Voulez-vous vraiment ouvrir le mois de {mois} ?", parent=fenetre_ouvrir_cloturer):
+                etat_mois[mois] = "Ouvert"
+                messagebox.showinfo("Mois Ouvert", f"Le mois de {mois} est maintenant ouvert.", parent=fenetre_ouvrir_cloturer)
+        else:
+            etat_mois[mois] = "Fermé"
+            messagebox.showinfo("Mois Fermé", f"Le mois de {mois} est maintenant fermé.", parent=fenetre_ouvrir_cloturer)
+        # Mettre à jour le texte du bouton correspondant au mois
+        update_button_text(mois)
+
+    def update_button_text(mois):
+        for btn in buttons:
+            if btn.cget("text").startswith(mois):
+                new_text = f"{mois} ({etat_mois[mois]})"
+                btn.config(text=new_text)
+                break
 
     # Création d'une grille pour les boutons des mois
     row = 0
@@ -455,34 +458,12 @@ def ouvrir_cloturer():
         if col > 2:  # Passer à la ligne suivante après 3 boutons
             col = 0
             row += 1
-# Suivi des boutons par mois
-buttons = []
-# Fonction pour basculer l'état d'un mois
-def toggle_mois(mois):
-    if etat_mois[mois] == "Fermé":
-        etat_mois[mois] = "Ouvert"
-        messagebox.showinfo("Mois Ouvert", f"Le mois de {mois} est maintenant ouvert.")
-    else:
-        etat_mois[mois] = "Fermé"
-        messagebox.showinfo("Mois Fermé", f"Le mois de {mois} est maintenant fermé.")
-    # Mettre à jour le texte du bouton correspondant au mois
-    update_button_text(mois)
-
-def update_button_text(mois):
-    global buttons  # Référence globale aux boutons des mois
-
-    for btn in buttons:
-        if btn.cget("text").startswith(mois):
-            new_text = f"{mois} ({etat_mois[mois]})"
-            btn.config(text=new_text)
-            break
-
 
 # Fonction pour consulter les soldes avec calendrier des mois
 def consulter_solde():
     fenetre_solde = tk.Toplevel()
     fenetre_solde.title("Solde des Matières")
-    fenetre_solde.geometry("800x400")
+    fenetre_solde.geometry("800x500")
     fenetre_solde.configure(bg="#ffffff")
 
     # Création d'une grille pour les boutons des mois
@@ -501,7 +482,7 @@ def consulter_solde():
 def afficher_solde_mois(mois):
     fenetre_solde_mois = tk.Toplevel()
     fenetre_solde_mois.title(f"Solde des Matières pour {mois}")
-    fenetre_solde_mois.geometry("800x400")
+    fenetre_solde_mois.geometry("800x500")
     fenetre_solde_mois.configure(bg="#ffffff")
 
     columns = ("code_matiere", "quantite_initiale", "valeur_initiale", "quantite_finale", "valeur_finale")
@@ -513,24 +494,16 @@ def afficher_solde_mois(mois):
     tree.heading("quantite_finale", text="Quantité Solde Finale")
     tree.heading("valeur_finale", text="Valeur Solde Finale")
 
-    # Ajouter des soldes fictifs pour exemple
-    soldes = [
-        ("M001", 100, 5000, 80, 4000),
-        ("M002", 200, 10000, 150, 7500),
-        ("M003", 300, 15000, 250, 12500)
-    ]
 
-    for solde in soldes:
-        tree.insert("", tk.END, values=solde)
+#############################    SOLDE SOLDE SOLDE SOLDE #########################################################
 
-    tree.pack(expand=True, fill=tk.BOTH)
-
+##############################    ENTRES ENTRES ENTRES    #########################################################  
 
 # Fonction pour ouvrir la fenêtre des entrées
 def ouvrir_fenetre_entrees():
     fenetre_entrees = tk.Toplevel()
     fenetre_entrees.title("Gestion des Entrées")
-    fenetre_entrees.geometry("400x200")
+    fenetre_entrees.geometry("800x500")
     fenetre_entrees.configure(bg="#ffffff")
 
     # Frame pour les boutons
@@ -538,7 +511,7 @@ def ouvrir_fenetre_entrees():
     frame_boutons.pack(expand=True, padx=20, pady=20)
 
     # Bouton Consulter entrées
-    btn_consulter = ttk.Button(frame_boutons, text="Consulter entrées", width=20)
+    btn_consulter = ttk.Button(frame_boutons, text="Consulter entrées", width=20, command=afficher_entrees)
     btn_consulter.grid(row=0, column=0, padx=10, pady=10)
 
     # Bouton Ajouter entrée
@@ -613,17 +586,507 @@ def afficher_fenetre_entrees():
                 for entry in entries.values():
                     entry.delete(0, tk.END)
             except sqlite3.IntegrityError:
-                messagebox.showerror("Erreur", "Une entrée avec ce code existe déjà.")
+                messagebox.showerror("Erreur", "Une entrée avec ce code existe déjà.",parent=afficher_fenetre_entrees)
             finally:
                 conn.close()
         else:
-            messagebox.showwarning("Champs manquants", "Veuillez remplir tous les champs.")
+            messagebox.showwarning("Champs manquants", "Veuillez remplir tous les champs.",parent=afficher_fenetre_entrees)
 
     # Bouton Ajouter
     btn_ajouter = ttk.Button(frame_ajout, text="Ajouter", command=ajouter_entree)
     btn_ajouter.grid(row=len(labels_text), column=0, columnspan=2, padx=10, pady=10)
 
+    # Fonction pour afficher les entrées dans une nouvelle fenêtre
+def afficher_entrees():
+    fenetre_consulter = tk.Toplevel()
+    fenetre_consulter.title("Consulter les Entrées")
+    fenetre_consulter.geometry("800x500")
+    fenetre_consulter.configure(bg="#ffffff")
 
+    # Configuration du tableau
+    columns = ("Code Entrée", "Quantité Entrée", "Valeur Entrée", "Code Article", "Frais d'approches", "Code BR", "Jour", "Mois", "Année")
+    tree = ttk.Treeview(fenetre_consulter, columns=columns, show="headings", height=10)
+
+    for col in columns:
+        tree.heading(col, text=col)
+        tree.column(col, width=100)
+
+    tree.pack(expand=True, fill=tk.BOTH)
+
+    # Récupération des données de la base de données
+    try:
+        conn = sqlite3.connect("comptabilit_matiere.db")
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM Entree")
+        for row in cursor.fetchall():
+            tree.insert("", tk.END, values=row)
+    except Exception as e:
+        messagebox.showerror("Erreur", str(e), parent=fenetre_consulter)
+    finally:
+        conn.close()
+
+##############################    ENTRES ENTRES ENTRES    #########################################################  
+
+
+##############################    BON    BON     BON     #########################################
+# BSM  BRT  BRM 
+def ouvrir_fenetre_bon():
+    fenetre_bon = tk.Toplevel()
+    fenetre_bon.title("Bon")
+    fenetre_bon.geometry("800x500")
+    fenetre_bon.configure(bg="#ffffff")
+
+    # Charger l'image de la flèche
+    fleche_image = Image.open("retour.png")  # Assurez-vous que le fichier est dans le bon répertoire
+    fleche_image = fleche_image.resize((30, 30), Image.LANCZOS)  # Redimensionner l'image
+    fleche_photo = ImageTk.PhotoImage(fleche_image)
+
+    # Frame pour la flèche en haut à gauche
+    frame_fleche = tk.Frame(fenetre_bon, bg="#ffffff")
+    frame_fleche.pack(side=tk.TOP, anchor="nw", padx=10, pady=10)
+
+
+    # Label pour l'icône de la flèche
+    label_fleche = tk.Label(frame_fleche, image=fleche_photo, bg="#ffffff", cursor="hand2")
+    label_fleche.image = fleche_photo  # Préserver une référence pour l'image
+    label_fleche.pack()
+    
+    # Attacher l'événement de clic à l'icône de la flèche
+    label_fleche.bind("<Button-1>", lambda e: fenetre_bon.destroy())
+
+    # Frame pour les boutons
+    frame_btn = tk.Frame(fenetre_bon, bg="#ffffff")
+    frame_btn.pack(expand=True, padx=20, pady=20)
+
+    # Bouton Consulter solde
+    btn_bsm = ttk.Button(frame_btn, text="BSM", width=20, command=ouvrir_fenetre_bsm)
+    btn_bsm.pack(pady=10)
+
+    # Bouton Ouvrir/Clôturer
+    btn_brt = ttk.Button(frame_btn, text="BRT", width=20, command=ouvrir_fenetre_brt)
+    btn_brt.pack(pady=10)
+
+    # Stock Magasin
+    btn_brm = ttk.Button(frame_btn, text="BRM", width=20, command=ouvrir_fenetre_brm)
+    btn_brm.pack(pady=10)
+
+### bsm ###################################################################
+# Fonction pour consulter les BSM
+def consulter_bsm():
+    fenetre_consulter_bsm = tk.Toplevel()
+    fenetre_consulter_bsm.title("Consulter les BSM")
+    fenetre_consulter_bsm.geometry("800x500")
+    fenetre_consulter_bsm.configure(bg="#ffffff")
+
+    # Charger l'image de la flèche
+    fleche_image = Image.open("retour.png")  # Assurez-vous que le fichier est dans le bon répertoire
+    fleche_image = fleche_image.resize((30, 30), Image.LANCZOS)  # Redimensionner l'image
+    fleche_photo = ImageTk.PhotoImage(fleche_image)
+
+    # Frame pour la flèche en haut à gauche
+    frame_fleche = tk.Frame(fenetre_consulter_bsm, bg="#ffffff")
+    frame_fleche.pack(side=tk.TOP, anchor="nw", padx=10, pady=10)
+
+
+    # Label pour l'icône de la flèche
+    label_fleche = tk.Label(frame_fleche, image=fleche_photo, bg="#ffffff", cursor="hand2")
+    label_fleche.image = fleche_photo  # Préserver une référence pour l'image
+    label_fleche.pack()
+    
+    # Attacher l'événement de clic à l'icône de la flèche
+    label_fleche.bind("<Button-1>", lambda e: fenetre_consulter_bsm.destroy())
+
+    # Création du tableau
+    columns = ("Code BSM", "Jour", "Mois", "Année", "Nom", "Adresse")
+    tree = ttk.Treeview(fenetre_consulter_bsm, columns=columns, show="headings", height=10)
+
+    # Configuration des colonnes du tableau
+    for col in columns:
+        tree.heading(col, text=col)
+        tree.column(col, width=100)
+
+    tree.pack(expand=True, fill=tk.BOTH, padx=10, pady=10)
+
+    # Connexion à la base de données et récupération des données
+    conn = sqlite3.connect("comptabilit_matiere.db")
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM BSM")
+    rows = cursor.fetchall()
+
+    # Insertion des données dans le tableau
+    for row in rows:
+        tree.insert("", tk.END, values=row)
+
+    conn.close()
+# Fonction pour ajouter un BSM
+def ajouter_bsm():
+    fenetre_ajout_bsm = tk.Toplevel()
+    fenetre_ajout_bsm.title("Ajouter un BSM")
+    fenetre_ajout_bsm.geometry("800x500")
+    fenetre_ajout_bsm.configure(bg="#ffffff")
+
+
+
+    # Labels et champs de saisie pour les attributs
+    labels_text = ["Code BSM", "Jour", "Mois", "Année", "Nom", "Adresse"]
+    entries = {}
+
+    for i, text in enumerate(labels_text):
+        label = ttk.Label(fenetre_ajout_bsm, text=text + ":")
+        label.grid(row=i, column=0, padx=10, pady=10, sticky=tk.W)
+        entry = ttk.Entry(fenetre_ajout_bsm, width=30)
+        entry.grid(row=i, column=1, padx=10, pady=10)
+        entries[text] = entry
+
+    # Fonction pour ajouter un BSM à la base de données
+    def ajouter_bsm_bd():
+        code_bsm = entries["Code BSM"].get()
+        jour = entries["Jour"].get()
+        mois = entries["Mois"].get()
+        annee = entries["Année"].get()
+        nom = entries["Nom"].get()
+        adresse = entries["Adresse"].get()
+
+        if code_bsm and jour and mois and annee and nom and adresse:
+            try:
+                conn = sqlite3.connect("comptabilit_matiere.db")
+                cursor = conn.cursor()
+                cursor.execute("INSERT INTO BSM (Code_bsm, jour, mois, annee, nom, adresse) VALUES (?, ?, ?, ?, ?, ?)",
+                               (code_bsm, jour, mois, annee, nom, adresse))
+                conn.commit()
+                messagebox.showinfo("Succès", "Le BSM a été ajouté avec succès.", parent=fenetre_ajout_bsm)
+                # Réinitialiser les champs de saisie après ajout
+                for entry in entries.values():
+                    entry.delete(0, tk.END)
+            except sqlite3.IntegrityError:
+                messagebox.showerror("Erreur", "Un BSM avec ce code existe déjà.", parent=fenetre_ajout_bsm)
+            finally:
+                conn.close()
+        else:
+            messagebox.showwarning("Champs manquants", "Veuillez remplir tous les champs.", parent=fenetre_ajout_bsm)
+
+    # Bouton Ajouter
+    btn_ajouter = ttk.Button(fenetre_ajout_bsm, text="Ajouter", command=ajouter_bsm_bd)
+    btn_ajouter.grid(row=len(labels_text), column=0, columnspan=2, padx=10, pady=10)
+
+# Fonction pour ouvrir la fenêtre de gestion des bons
+def ouvrir_fenetre_bsm():
+    fenetre_bsm = tk.Toplevel()
+    fenetre_bsm.title("BSM")
+    fenetre_bsm.geometry("800x500")
+    fenetre_bsm.configure(bg="#ffffff")
+
+    # Charger l'image de la flèche
+    fleche_image = Image.open("retour.png")  # Assurez-vous que le fichier est dans le bon répertoire
+    fleche_image = fleche_image.resize((30, 30), Image.LANCZOS)  # Redimensionner l'image
+    fleche_photo = ImageTk.PhotoImage(fleche_image)
+
+    # Frame pour la flèche en haut à gauche
+    frame_fleche = tk.Frame(fenetre_bsm, bg="#ffffff")
+    frame_fleche.pack(side=tk.TOP, anchor="nw", padx=10, pady=10)
+
+
+    # Label pour l'icône de la flèche
+    label_fleche = tk.Label(frame_fleche, image=fleche_photo, bg="#ffffff", cursor="hand2")
+    label_fleche.image = fleche_photo  # Préserver une référence pour l'image
+    label_fleche.pack()
+    
+    # Attacher l'événement de clic à l'icône de la flèche
+    label_fleche.bind("<Button-1>", lambda e: fenetre_bsm.destroy())
+
+
+    # Frame pour les boutons
+    frame_boutons = tk.Frame(fenetre_bsm, bg="#ffffff")
+    frame_boutons.pack(expand=True, padx=20, pady=20)
+
+
+    # Bouton AJOUTER BSM
+    ajouter_bsm_btn = ttk.Button(frame_boutons, text="Ajouter BSM", width=20, command=ajouter_bsm)
+    ajouter_bsm_btn.pack(pady=10)
+
+    # Bouton Consulter BSM
+    consulter_bsm_btn = ttk.Button(frame_boutons, text="Consulter BSM", width=20, command=consulter_bsm)
+    consulter_bsm_btn.pack(pady=10)
+    consulter_bsm_btn.pack(pady=10)
+
+
+### brt  ##############################################################################
+# Fonction pour consulter les BRT
+def consulter_brt():
+    fenetre_consulter_brt = tk.Toplevel()
+    fenetre_consulter_brt.title("Consulter les BRT")
+    fenetre_consulter_brt.geometry("800x500")
+    fenetre_consulter_brt.configure(bg="#ffffff")
+
+    # Charger l'image de la flèche
+    fleche_image = Image.open("retour.png")  # Assurez-vous que le fichier est dans le bon répertoire
+    fleche_image = fleche_image.resize((30, 30), Image.LANCZOS)  # Redimensionner l'image
+    fleche_photo = ImageTk.PhotoImage(fleche_image)
+
+    # Frame pour la flèche en haut à gauche
+    frame_fleche = tk.Frame(fenetre_consulter_brt, bg="#ffffff")
+    frame_fleche.pack(side=tk.TOP, anchor="nw", padx=10, pady=10)
+
+
+    # Label pour l'icône de la flèche
+    label_fleche = tk.Label(frame_fleche, image=fleche_photo, bg="#ffffff", cursor="hand2")
+    label_fleche.image = fleche_photo  # Préserver une référence pour l'image
+    label_fleche.pack()
+    
+    # Attacher l'événement de clic à l'icône de la flèche
+    label_fleche.bind("<Button-1>", lambda e: fenetre_consulter_brt.destroy())
+
+    # Création du tableau
+    columns = ("Code BRT", "Jour", "Mois", "Année", "Nom")
+    tree = ttk.Treeview(fenetre_consulter_brt, columns=columns, show="headings", height=10)
+
+    # Configuration des colonnes du tableau
+    for col in columns:
+        tree.heading(col, text=col)
+        tree.column(col, width=100)
+
+    tree.pack(expand=True, fill=tk.BOTH, padx=10, pady=10)
+
+    # Connexion à la base de données et récupération des données
+    conn = sqlite3.connect("comptabilit_matiere.db")
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM BRT")
+    rows = cursor.fetchall()
+
+    # Insertion des données dans le tableau
+    for row in rows:
+        tree.insert("", tk.END, values=row)
+
+    conn.close()
+
+
+# Fonction pour ajouter un BRT
+def ajouter_brt():
+    fenetre_ajout_brt = tk.Toplevel()
+    fenetre_ajout_brt.title("Ajouter un BRT")
+    fenetre_ajout_brt.geometry("800x500")
+    fenetre_ajout_brt.configure(bg="#ffffff")
+
+
+    # Labels et champs de saisie pour les attributs
+    labels_text = ["Code BRT", "Jour", "Mois", "Année", "Nom"]
+    entries = {}
+
+    for i, text in enumerate(labels_text):
+        label = ttk.Label(fenetre_ajout_brt, text=text + ":")
+        label.grid(row=i, column=0, padx=10, pady=10, sticky=tk.W)
+        entry = ttk.Entry(fenetre_ajout_brt, width=30)
+        entry.grid(row=i, column=1, padx=10, pady=10)
+        entries[text] = entry
+
+    # Fonction pour ajouter un BRT à la base de données
+    def ajouter_brt_bd():
+        code_brt = entries["Code BRT"].get()
+        jour = entries["Jour"].get()
+        mois = entries["Mois"].get()
+        annee = entries["Année"].get()
+        nom = entries["Nom"].get()
+
+
+        if code_brt and jour and mois and annee and nom :
+            try:
+                conn = sqlite3.connect("comptabilit_matiere.db")
+                cursor = conn.cursor()
+                cursor.execute("INSERT INTO BRT (code_brt, jour, mois, annee, nom) VALUES (?, ?, ?, ?, ?)",
+                               (code_brt, jour, mois, annee, nom))
+                conn.commit()
+                messagebox.showinfo("Succès", "Le BRT a été ajouté avec succès.", parent=fenetre_ajout_brt)
+                # Réinitialiser les champs de saisie après ajout
+                for entry in entries.values():
+                    entry.delete(0, tk.END)
+            except sqlite3.IntegrityError:
+                messagebox.showerror("Erreur", "Un BRT avec ce code existe déjà.", parent=fenetre_ajout_brt)
+            finally:
+                conn.close()
+        else:
+            messagebox.showwarning("Champs manquants", "Veuillez remplir tous les champs.", parent=fenetre_ajout_brt)
+
+    # Bouton Ajouter
+    btn_ajouter = ttk.Button(fenetre_ajout_brt, text="Ajouter", command=ajouter_brt_bd)
+    btn_ajouter.grid(row=len(labels_text), column=0, columnspan=2, padx=10, pady=10)
+
+# Fonction pour ouvrir la fenêtre de gestion des bons
+def ouvrir_fenetre_brt():
+    fenetre_brt = tk.Toplevel()
+    fenetre_brt.title("BRT")
+    fenetre_brt.geometry("800x500")
+    fenetre_brt.configure(bg="#ffffff")
+
+    # Charger l'image de la flèche
+    fleche_image = Image.open("retour.png")  # Assurez-vous que le fichier est dans le bon répertoire
+    fleche_image = fleche_image.resize((30, 30), Image.LANCZOS)  # Redimensionner l'image
+    fleche_photo = ImageTk.PhotoImage(fleche_image)
+
+    # Frame pour la flèche en haut à gauche
+    frame_fleche = tk.Frame(fenetre_brt , bg="#ffffff")
+    frame_fleche.pack(side=tk.TOP, anchor="nw", padx=10, pady=10)
+
+
+    # Label pour l'icône de la flèche
+    label_fleche = tk.Label(frame_fleche, image=fleche_photo, bg="#ffffff", cursor="hand2")
+    label_fleche.image = fleche_photo  # Préserver une référence pour l'image
+    label_fleche.pack()
+    
+    # Attacher l'événement de clic à l'icône de la flèche
+    label_fleche.bind("<Button-1>", lambda e: fenetre_brt .destroy())
+
+    # Frame pour les boutons
+    frame_boutons = tk.Frame(fenetre_brt, bg="#ffffff")
+    frame_boutons.pack(expand=True, padx=20, pady=20)
+
+    # Bouton AJOUTER BSM
+    ajouter_brt_btn = ttk.Button(frame_boutons, text="Ajouter BRT", width=20, command=ajouter_brt)
+    ajouter_brt_btn.pack(pady=10)
+
+    # Bouton Consulter BSM
+    consulter_brt_btn = ttk.Button(frame_boutons, text="Consulter BRT", width=20, command=consulter_brt)
+    consulter_brt_btn.pack(pady=10)
+### brm ######################################################################
+# Fonction pour consulter les BSM
+def consulter_brm():
+    fenetre_consulter_brm = tk.Toplevel()
+    fenetre_consulter_brm.title("Consulter les BRM")
+    fenetre_consulter_brm.geometry("800x500")
+    fenetre_consulter_brm.configure(bg="#ffffff")
+
+    # Charger l'image de la flèche
+    fleche_image = Image.open("retour.png")  # Assurez-vous que le fichier est dans le bon répertoire
+    fleche_image = fleche_image.resize((30, 30), Image.LANCZOS)  # Redimensionner l'image
+    fleche_photo = ImageTk.PhotoImage(fleche_image)
+
+    # Frame pour la flèche en haut à gauche
+    frame_fleche = tk.Frame(fenetre_consulter_brm , bg="#ffffff")
+    frame_fleche.pack(side=tk.TOP, anchor="nw", padx=10, pady=10)
+
+
+    # Label pour l'icône de la flèche
+    label_fleche = tk.Label(frame_fleche, image=fleche_photo, bg="#ffffff", cursor="hand2")
+    label_fleche.image = fleche_photo  # Préserver une référence pour l'image
+    label_fleche.pack()
+    
+    # Attacher l'événement de clic à l'icône de la flèche
+    label_fleche.bind("<Button-1>", lambda e: fenetre_consulter_brm .destroy())
+    
+
+    # Création du tableau
+    columns = ("Code BRM", "Jour", "Mois", "Année", "Nom")
+    tree = ttk.Treeview(fenetre_consulter_brm, columns=columns, show="headings", height=10)
+
+    # Configuration des colonnes du tableau
+    for col in columns:
+        tree.heading(col, text=col)
+        tree.column(col, width=100)
+
+    tree.pack(expand=True, fill=tk.BOTH, padx=10, pady=10)
+
+    # Connexion à la base de données et récupération des données
+    conn = sqlite3.connect("comptabilit_matiere.db")
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM BRM")
+    rows = cursor.fetchall()
+
+    # Insertion des données dans le tableau
+    for row in rows:
+        tree.insert("", tk.END, values=row)
+
+    conn.close()
+
+
+# Fonction pour ajouter un BRM
+def ajouter_brm():
+    fenetre_ajout_brm = tk.Toplevel()
+    fenetre_ajout_brm.title("Ajouter un BRM")
+    fenetre_ajout_brm.geometry("800x500")
+    fenetre_ajout_brm.configure(bg="#ffffff")
+
+
+    # Labels et champs de saisie pour les attributs
+    labels_text = ["Code BRM", "Jour", "Mois", "Année", "Nom"]
+    entries = {}
+
+    for i, text in enumerate(labels_text):
+        label = ttk.Label(fenetre_ajout_brm, text=text + ":")
+        label.grid(row=i, column=0, padx=10, pady=10, sticky=tk.W)
+        entry = ttk.Entry(fenetre_ajout_brm, width=30)
+        entry.grid(row=i, column=1, padx=10, pady=10)
+        entries[text] = entry
+
+    # Fonction pour ajouter un BRM à la base de données
+    def ajouter_brm_bd():
+        code_brm = entries["Code BRM"].get()
+        jour = entries["Jour"].get()
+        mois = entries["Mois"].get()
+        annee = entries["Année"].get()
+        nom = entries["Nom"].get()
+
+
+        if code_brm and jour and mois and annee and nom :
+            try:
+                conn = sqlite3.connect("comptabilit_matiere.db")
+                cursor = conn.cursor()
+                cursor.execute("INSERT INTO BRM (code_brm, jour, mois, annee, nom) VALUES (?, ?, ?, ?, ?)",
+                               (code_brm, jour, mois, annee, nom))
+                conn.commit()
+                messagebox.showinfo("Succès", "Le BRM a été ajouté avec succès.", parent=fenetre_ajout_brm)
+                # Réinitialiser les champs de saisie après ajout
+                for entry in entries.values():
+                    entry.delete(0, tk.END)
+            except sqlite3.IntegrityError:
+                messagebox.showerror("Erreur", "Un BRM avec ce code existe déjà.", parent=fenetre_ajout_brm)
+            finally:
+                conn.close()
+        else:
+            messagebox.showwarning("Champs manquants", "Veuillez remplir tous les champs.", parent=fenetre_ajout_brm)
+
+    # Bouton Ajouter
+    btn_ajouter = ttk.Button(fenetre_ajout_brm, text="Ajouter", command=ajouter_brm_bd)
+    btn_ajouter.grid(row=len(labels_text), column=0, columnspan=2, padx=10, pady=10)
+
+# Fonction pour ouvrir la fenêtre de gestion des bons
+def ouvrir_fenetre_brm():
+    fenetre_brm = tk.Toplevel()
+    fenetre_brm.title("BRM")
+    fenetre_brm.geometry("800x800")
+    fenetre_brm.configure(bg="#ffffff")
+
+    # Charger l'image de la flèche
+    fleche_image = Image.open("retour.png")  # Assurez-vous que le fichier est dans le bon répertoire
+    fleche_image = fleche_image.resize((30, 30), Image.LANCZOS)  # Redimensionner l'image
+    fleche_photo = ImageTk.PhotoImage(fleche_image)
+
+    # Frame pour la flèche en haut à gauche
+    frame_fleche = tk.Frame(fenetre_brm , bg="#ffffff")
+    frame_fleche.pack(side=tk.TOP, anchor="nw", padx=10, pady=10)
+
+
+    # Label pour l'icône de la flèche
+    label_fleche = tk.Label(frame_fleche, image=fleche_photo, bg="#ffffff", cursor="hand2")
+    label_fleche.image = fleche_photo  # Préserver une référence pour l'image
+    label_fleche.pack()
+    
+    # Attacher l'événement de clic à l'icône de la flèche
+    label_fleche.bind("<Button-1>", lambda e: fenetre_brm .destroy())
+
+
+    # Frame pour les boutons
+    frame_boutons = tk.Frame(fenetre_brm, bg="#ffffff")
+    frame_boutons.pack(expand=True, padx=20, pady=20)
+
+    # Bouton AJOUTER BSM
+    ajouter_brm_btn = ttk.Button(frame_boutons, text="Ajouter BRM", width=20, command=ajouter_brm)
+    ajouter_brm_btn.pack(pady=10)
+
+    # Bouton Consulter BRM
+    consulter_brm_btn = ttk.Button(frame_boutons, text="Consulter BRM", width=20, command=consulter_brm)
+    consulter_brm_btn.pack(pady=10)
+
+############################### BON    BON     BON    #####################################################
+############################################################################################################
 # Création de la fenêtre de connexion
 fenetre_connexion = tk.Tk()
 fenetre_connexion.title("Connexion")
