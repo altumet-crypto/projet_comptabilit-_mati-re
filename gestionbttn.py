@@ -405,7 +405,7 @@ def ouvrir_fenetre_solde():
     btn_consulter.pack(pady=10)
 
     # Bouton Stock REBUTE
-    btn_consulter = ttk.Button(frame_boutons, text="Stock Rebuté", width=20)
+    btn_consulter = ttk.Button(frame_boutons, text="Stock Rebuté", width=20, command=consulter_stock_rebute)
     btn_consulter.pack(pady=10)
 
 
@@ -596,7 +596,7 @@ def afficher_fenetre_entrees():
     articles = cursor.fetchall()
     label_code_article = ttk.Label(frame_ajout, text="Code Article:")
     label_code_article.grid(row=3, column=0, padx=10, pady=5, sticky=tk.W)
-    entry_code_article = ttk.Combobox(frame_ajout, width=28, values=articles)
+    entry_code_article = ttk.Combobox(frame_ajout, width=28, values=articles, state="readonly")
     entry_code_article.grid(row=3, column=1, padx=10, pady=5)
     
 
@@ -626,7 +626,7 @@ def afficher_fenetre_entrees():
 
     label_mois = ttk.Label(frame_ajout, text="Mois:")
     label_mois.grid(row=7, column=0, padx=10, pady=5, sticky=tk.W)
-    entry_mois = ttk.Combobox(frame_ajout, width=28, values=etat_mois)
+    entry_mois = ttk.Combobox(frame_ajout, width=28, values=etat_mois, state="readonly")
     entry_mois.grid(row=7, column=1, padx=10, pady=5)
     
 
@@ -721,8 +721,8 @@ def afficher_entrees():
     finally:
         conn.close()
 
-##############################    ENTRES ENTRES ENTRES    ######################################################### #####
-##############################SORTIES SORTIES SORTIES #############################################################
+##############################    ENTRES ENTRES ENTRES    ####################################################################
+##############################   SORTIES SORTIES SORTIES   ########################################################################
 
 # Fonction pour ouvrir la fenêtre des entrées
 def ouvrir_fenetre_sortie():
@@ -800,14 +800,14 @@ def afficher_fenetre_sorties():
     articles = cursor.fetchall()
     label_code_article = ttk.Label(frame_ajout, text="Code Article:")
     label_code_article.grid(row=3, column=0, padx=10, pady=5, sticky=tk.W)
-    entry_code_article = ttk.Combobox(frame_ajout, width=28, values=articles)
+    entry_code_article = ttk.Combobox(frame_ajout, width=28, values=articles, state="readonly")
     entry_code_article.grid(row=3, column=1, padx=10, pady=5)
     
     values_bon = ["BSM", "BRM", "BRT"]
 
     label_bon = ttk.Label(frame_ajout, text="Bon :")
     label_bon.grid(row=4, column=0, padx=10, pady=5, sticky=tk.W)
-    entry_bon = ttk.Combobox(frame_ajout, width=30, values=values_bon)
+    entry_bon = ttk.Combobox(frame_ajout, width=30, values=values_bon, state="readonly")
     entry_bon.grid(row=4, column=1, padx=10, pady=5)
     
     if entry_bon.get() == "BSM" : 
@@ -824,7 +824,7 @@ def afficher_fenetre_sorties():
             
     label_code_bon = ttk.Label(frame_ajout, text="Code Bon :")
     label_code_bon.grid(row=5, column=0, padx=10, pady=5, sticky=tk.W)
-    entry_code_bon = ttk.Combobox(frame_ajout, width=30, values=values_code_bon)
+    entry_code_bon = ttk.Combobox(frame_ajout, width=30, values=values_code_bon, state="readonly")
     entry_code_bon.grid(row=5, column=1, padx=10, pady=5)
     
 
@@ -873,7 +873,7 @@ def afficher_fenetre_sorties():
                                 (quantite_sortie, valeur_sortie,  mois, code_article))
                         cursor.execute("UPDATE magasin SET quantite = quantite - ? , valeur = valeur - ? WHERE  Code_article = ?",
                                 (quantite_sortie, valeur_sortie,  code_article))
-                        cursor.execute("UPDATE stockRBT SET quantite = quantite + ? , valeur = valeur + ? WHERE  Code_article = ?",
+                        cursor.execute("UPDATE stockRBT SET quantite_rebute = quantite_rebute + ? , valeur_rebute = valeur_rebute + ? WHERE  Code_article = ?",
                                 (quantite_sortie, valeur_sortie,  code_article))
 
                 conn.commit()
@@ -932,8 +932,8 @@ def afficher_sorties():
 
 
 
-##############################SORTIES SORTIES SORTIES ##############################################################
-##############################    BON    BON     BON     #########################################
+##############################      SORTIES SORTIES SORTIES ##############################################################
+##############################    BON    BON     BON     ########################################################################
 # BSM  BRT  BRM 
 def ouvrir_fenetre_bon():
     fenetre_bon = tk.Toplevel()
@@ -975,7 +975,7 @@ def ouvrir_fenetre_bon():
     btn_brm = ttk.Button(frame_btn, text="BRM", width=20, command=ouvrir_fenetre_brm)
     btn_brm.pack(pady=10)
 
-### bsm ###################################################################
+### BSM BSM BSM BSM BSM BSM BSM BSM################################################################
 # Fonction pour consulter les BSM
 def consulter_bsm():
     fenetre_consulter_bsm = tk.Toplevel()
@@ -1112,7 +1112,7 @@ def ouvrir_fenetre_bsm():
     # Bouton Consulter BSM
     consulter_bsm_btn = ttk.Button(frame_boutons, text="Consulter BSM", width=20, command=consulter_bsm)
     consulter_bsm_btn.pack(pady=10)
-    consulter_bsm_btn.pack(pady=10)
+    
 
 
 ### brt  ##############################################################################
@@ -1404,7 +1404,7 @@ def consulter_magasin():
     fenetre_magasin.configure(bg="#ffffff")
     
     # Création du tableau
-    columns = ("Code Article", "Quantité", "Valeur", "Jour", "Mois", "Année")
+    columns = ("Code Article", "Quantité", "Valeur")
     tree = ttk.Treeview(fenetre_magasin, columns=columns, show="headings", height=15)
     
     # Configuration des colonnes du tableau
@@ -1415,7 +1415,40 @@ def consulter_magasin():
     tree.pack(expand=True, fill=tk.BOTH, padx=20, pady=20)
 
     # Récupération des données de la table magasin
-    cursor.execute("SELECT code_article, quantite, valeur, jour, mois, annee FROM magasin")
+    cursor.execute("SELECT code_article, quantite, valeur FROM magasin")
+    rows = cursor.fetchall()
+    
+    # Insertion des données dans le tableau
+    for row in rows:
+        tree.insert("", tk.END, values=row)
+    
+    conn.close()
+##########################################################################################################
+############################### MAGASIN  MAGASIN MAGASIN ##################################################################
+def consulter_stock_rebute():
+    # Connexion à la base de données
+    conn = sqlite3.connect('comptabilit_matiere.db')
+    cursor = conn.cursor()
+    
+    # Création de la fenêtre
+    fenetre_magasin = tk.Toplevel()
+    fenetre_magasin.title("Données du Stock Rebuté")
+    fenetre_magasin.geometry("800x400")
+    fenetre_magasin.configure(bg="#ffffff")
+    
+    # Création du tableau
+    columns = ("Code Article", "Quantité", "Valeur")
+    tree = ttk.Treeview(fenetre_magasin, columns=columns, show="headings", height=15)
+    
+    # Configuration des colonnes du tableau
+    for col in columns:
+        tree.heading(col, text=col)
+        tree.column(col, anchor=tk.CENTER)
+    
+    tree.pack(expand=True, fill=tk.BOTH, padx=20, pady=20)
+
+    # Récupération des données de la table magasin
+    cursor.execute("SELECT code_article, quantite_rebute, valeur_rebute FROM stockRBT")
     rows = cursor.fetchall()
     
     # Insertion des données dans le tableau
@@ -1424,6 +1457,8 @@ def consulter_magasin():
     
     conn.close()
 ##################################################################################################
+
+
 # Création de la fenêtre de connexion
 fenetre_connexion = tk.Tk()
 fenetre_connexion.title("Connexion")
