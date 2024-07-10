@@ -942,7 +942,7 @@ def ouvrir_fenetre_bon():
     fenetre_bon.configure(bg="#ffffff")
 
     # Charger l'image de la flèche
-    fleche_image = Image.open("retour.png")  # Assurez-vous que le fichier est dans le bon répertoire
+    fleche_image = Image.open("img\\retour.png")  # Assurez-vous que le fichier est dans le bon répertoire
     fleche_image = fleche_image.resize((30, 30), Image.LANCZOS)  # Redimensionner l'image
     fleche_photo = ImageTk.PhotoImage(fleche_image)
 
@@ -984,7 +984,7 @@ def consulter_bsm():
     fenetre_consulter_bsm.configure(bg="#ffffff")
 
     # Charger l'image de la flèche
-    fleche_image = Image.open("retour.png")  # Assurez-vous que le fichier est dans le bon répertoire
+    fleche_image = Image.open("img\\retour.png")  # Assurez-vous que le fichier est dans le bon répertoire
     fleche_image = fleche_image.resize((30, 30), Image.LANCZOS)  # Redimensionner l'image
     fleche_photo = ImageTk.PhotoImage(fleche_image)
 
@@ -1082,7 +1082,7 @@ def ouvrir_fenetre_bsm():
     fenetre_bsm.configure(bg="#ffffff")
 
     # Charger l'image de la flèche
-    fleche_image = Image.open("retour.png")  # Assurez-vous que le fichier est dans le bon répertoire
+    fleche_image = Image.open("img\\retour.png")  # Assurez-vous que le fichier est dans le bon répertoire
     fleche_image = fleche_image.resize((30, 30), Image.LANCZOS)  # Redimensionner l'image
     fleche_photo = ImageTk.PhotoImage(fleche_image)
 
@@ -1124,7 +1124,7 @@ def consulter_brt():
     fenetre_consulter_brt.configure(bg="#ffffff")
 
     # Charger l'image de la flèche
-    fleche_image = Image.open("retour.png")  # Assurez-vous que le fichier est dans le bon répertoire
+    fleche_image = Image.open("img\\retour.png")  # Assurez-vous que le fichier est dans le bon répertoire
     fleche_image = fleche_image.resize((30, 30), Image.LANCZOS)  # Redimensionner l'image
     fleche_photo = ImageTk.PhotoImage(fleche_image)
 
@@ -1223,7 +1223,7 @@ def ouvrir_fenetre_brt():
     fenetre_brt.configure(bg="#ffffff")
 
     # Charger l'image de la flèche
-    fleche_image = Image.open("retour.png")  # Assurez-vous que le fichier est dans le bon répertoire
+    fleche_image = Image.open("img\\retour.png")  # Assurez-vous que le fichier est dans le bon répertoire
     fleche_image = fleche_image.resize((30, 30), Image.LANCZOS)  # Redimensionner l'image
     fleche_photo = ImageTk.PhotoImage(fleche_image)
 
@@ -1260,7 +1260,7 @@ def consulter_brm():
     fenetre_consulter_brm.configure(bg="#ffffff")
 
     # Charger l'image de la flèche
-    fleche_image = Image.open("retour.png")  # Assurez-vous que le fichier est dans le bon répertoire
+    fleche_image = Image.open("img\\retour.png")  # Assurez-vous que le fichier est dans le bon répertoire
     fleche_image = fleche_image.resize((30, 30), Image.LANCZOS)  # Redimensionner l'image
     fleche_photo = ImageTk.PhotoImage(fleche_image)
 
@@ -1360,7 +1360,7 @@ def ouvrir_fenetre_brm():
     fenetre_brm.configure(bg="#ffffff")
 
     # Charger l'image de la flèche
-    fleche_image = Image.open("retour.png")  # Assurez-vous que le fichier est dans le bon répertoire
+    fleche_image = Image.open("img\\retour.png")  # Assurez-vous que le fichier est dans le bon répertoire
     fleche_image = fleche_image.resize((30, 30), Image.LANCZOS)  # Redimensionner l'image
     fleche_photo = ImageTk.PhotoImage(fleche_image)
 
