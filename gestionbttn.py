@@ -3,11 +3,7 @@ from tkinter import ttk, messagebox
 import sqlite3
 from PIL import Image, ImageTk
 
-# État des mois (ouvert ou fermé)
-etat_mois = {mois: "Fermé" for mois in [
-    "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
-    "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"
-]}
+
 
 # Fonction pour vérifier les informations de connexion
 def verifier_connexion():
@@ -45,7 +41,7 @@ def ouvrir_fenetre_principale():
     btn_entrees = ttk.Button(fenetre_principale, text="Entrées", width=20, command=ouvrir_fenetre_entrees)
     btn_entrees.pack(pady=10)
 
-    btn_sorties = ttk.Button(fenetre_principale, text="Sorties", width=20)
+    btn_sorties = ttk.Button(fenetre_principale, text="Sorties", width=20, command=ouvrir_fenetre_sortie)
     btn_sorties.pack(pady=10)
 
     fenetre_principale.mainloop()
@@ -404,7 +400,8 @@ def ouvrir_fenetre_solde():
     btn_ouvrir_cloturer.pack(pady=10)
 
     # Stock Magasin
-    btn_consulter = ttk.Button(frame_boutons, text="Stock Magasin", width=20)
+
+    btn_consulter = ttk.Button(frame_boutons, text="Stock Magasin", width=20, command=consulter_magasin)
     btn_consulter.pack(pady=10)
 
     # Bouton Stock REBUTE
@@ -412,17 +409,22 @@ def ouvrir_fenetre_solde():
     btn_consulter.pack(pady=10)
 
 
-# Liste pour stocker les boutons des mois
-buttons = []
+# État des mois (ouvert ou fermé)
+etat_mois = {mois: "Fermé" for mois in [
+    "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
+    "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"
+]}
+
+
 
 # Fonction pour ouvrir/clôturer les soldes
 def ouvrir_cloturer():
-    global buttons  # Référence globale aux boutons des mois
+    
     fenetre_ouvrir_cloturer = tk.Toplevel()
     fenetre_ouvrir_cloturer.title("Ouvrir/Clôturer les Soldes")
     fenetre_ouvrir_cloturer.geometry("800x500")
     fenetre_ouvrir_cloturer.configure(bg="#ffffff")
-
+    
     # Suivi des boutons par mois
     buttons = []
 
@@ -480,20 +482,39 @@ def consulter_solde():
             row += 1
 
 def afficher_solde_mois(mois):
+    # Créer la fenêtre
     fenetre_solde_mois = tk.Toplevel()
     fenetre_solde_mois.title(f"Solde des Matières pour {mois}")
     fenetre_solde_mois.geometry("800x500")
     fenetre_solde_mois.configure(bg="#ffffff")
 
+    # Création du tableau
     columns = ("code_matiere", "quantite_initiale", "valeur_initiale", "quantite_finale", "valeur_finale")
     tree = ttk.Treeview(fenetre_solde_mois, columns=columns, show="headings")
 
+    # Configuration des colonnes
     tree.heading("code_matiere", text="Code Matière")
     tree.heading("quantite_initiale", text="Quantité Solde Initiale")
     tree.heading("valeur_initiale", text="Valeur Solde Initiale")
     tree.heading("quantite_finale", text="Quantité Solde Finale")
     tree.heading("valeur_finale", text="Valeur Solde Finale")
 
+    tree.pack(expand=True, fill=tk.BOTH, padx=20, pady=20)
+
+    # Connexion à la base de données
+    conn = sqlite3.connect('comptabilit_matiere.db')
+    cursor = conn.cursor()
+
+    # Récupération des données du mois spécifié
+    cursor.execute("SELECT Code_article, Solde_initiale_qte, Solde_initiale_val, Solde_finalee_qte, Solde_finale_val FROM Mois WHERE Nom_mois=?", (mois,))
+    rows = cursor.fetchall()
+
+    # Insertion des données dans le tableau
+    for row in rows:
+        tree.insert("", tk.END, values=row)
+
+    # Fermeture de la connexion à la base de données
+    conn.close()
 
 #############################    SOLDE SOLDE SOLDE SOLDE #########################################################
 
@@ -551,50 +572,125 @@ def afficher_fenetre_entrees():
     frame_ajout.pack(side=tk.BOTTOM, fill=tk.X, padx=10, pady=10)
 
     # Labels et champs de saisie pour les attributs
-    labels_text = ["Code Entrée", "Quantité Entrée", "Valeur Entrée", "Code Article", "Frais d'approches", "Code BR", "Jour", "Mois", "Annee"]
-    entries = {}
+    
 
-    for idx, text in enumerate(labels_text):
-        label = ttk.Label(frame_ajout, text=text + ":")
-        label.grid(row=idx, column=0, padx=10, pady=5, sticky=tk.W)
-        entry = ttk.Entry(frame_ajout, width=30)
-        entry.grid(row=idx, column=1, padx=10, pady=5)
-        entries[text] = entry
+    label_code_entre = ttk.Label(frame_ajout, text="Code Entrée:")
+    label_code_entre.grid(row=0, column=0, padx=10, pady=5, sticky=tk.W)
+    entry_code_entre = ttk.Entry(frame_ajout, width=30)
+    entry_code_entre.grid(row=0, column=1, padx=10, pady=5)
+    
+
+    label_quantite_entre = ttk.Label(frame_ajout, text="Quantité Entrée:")
+    label_quantite_entre.grid(row=1, column=0, padx=10, pady=5, sticky=tk.W)
+    entry_quantite_entre = ttk.Entry(frame_ajout, width=30)
+    entry_quantite_entre.grid(row=1, column=1, padx=10, pady=5)
+    
+
+    label_valeur_entre = ttk.Label(frame_ajout, text="Valeur Entrée:")
+    label_valeur_entre.grid(row=2, column=0, padx=10, pady=5, sticky=tk.W)
+    entry_valeur_entre = ttk.Entry(frame_ajout, width=30)
+    entry_valeur_entre.grid(row=2, column=1, padx=10, pady=5)
+    
+
+    cursor.execute("SELECT DISTINCT code_article FROM Article")
+    articles = cursor.fetchall()
+    label_code_article = ttk.Label(frame_ajout, text="Code Article:")
+    label_code_article.grid(row=3, column=0, padx=10, pady=5, sticky=tk.W)
+    entry_code_article = ttk.Combobox(frame_ajout, width=28, values=articles)
+    entry_code_article.grid(row=3, column=1, padx=10, pady=5)
+    
+
+    label_frais_approches = ttk.Label(frame_ajout, text="Frais d'approches:")
+    label_frais_approches.grid(row=4, column=0, padx=10, pady=5, sticky=tk.W)
+    entry_frais_approches = ttk.Entry(frame_ajout, width=30)
+    entry_frais_approches.grid(row=4, column=1, padx=10, pady=5)
+    
+
+    label_code_br = ttk.Label(frame_ajout, text="Code BR:")
+    label_code_br.grid(row=5, column=0, padx=10, pady=5, sticky=tk.W)
+    entry_code_br = ttk.Entry(frame_ajout, width=30)
+    entry_code_br.grid(row=5, column=1, padx=10, pady=5)
+    
+
+    label_jour = ttk.Label(frame_ajout, text="Jour:")
+    label_jour.grid(row=6, column=0, padx=10, pady=5, sticky=tk.W)
+    entry_jour = ttk.Entry(frame_ajout, width=30)
+    entry_jour.grid(row=6, column=1, padx=10, pady=5)
+    
+
+    etat_mois =  [
+    "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
+    "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"
+    ]
+
+
+    label_mois = ttk.Label(frame_ajout, text="Mois:")
+    label_mois.grid(row=7, column=0, padx=10, pady=5, sticky=tk.W)
+    entry_mois = ttk.Combobox(frame_ajout, width=28, values=etat_mois)
+    entry_mois.grid(row=7, column=1, padx=10, pady=5)
+    
+
+    label_annee = ttk.Label(frame_ajout, text="Annee:")
+    label_annee.grid(row=8, column=0, padx=10, pady=5, sticky=tk.W)
+    entry_annee = ttk.Entry(frame_ajout, width=30)
+    entry_annee.grid(row=8, column=1, padx=10, pady=5)
+    
+
+    conn.close()
 
     # Fonction pour ajouter une entrée à la base de données et au tableau
     def ajouter_entree():
-        code_entre = entries["Code Entrée"].get()
-        quantite_entre = entries["Quantité Entrée"].get()
-        valeur_entre = entries["Valeur Entrée"].get()
-        code_article = entries["Code Article"].get()
-        frais_approches = entries["Frais d'approches"].get()
-        code_br = entries["Code BR"].get()
-        jour = entries["Jour"].get()
-        mois = entries["Mois"].get()
-        annee = entries["Annee"].get()
+        code_entre = entry_code_entre.get()
+        quantite_entre = entry_quantite_entre.get()
+        valeur_entre = entry_valeur_entre.get()
+        frais_approches = entry_frais_approches.get()
+        code_article = entry_code_article.get()
+        jour = entry_jour.get()
+        mois = entry_mois.get()
+        annee = entry_annee.get()
+        code_br = entry_code_br.get()
 
-        if code_entre and quantite_entre and valeur_entre and code_article and frais_approches and code_br and jour and mois and annee:
+        if code_entre and quantite_entre and valeur_entre and frais_approches and code_article and jour and mois and annee and code_br:
             try:
                 conn = sqlite3.connect("comptabilit_matiere.db")
                 cursor = conn.cursor()
-                cursor.execute("INSERT INTO Entree (code_entre, quantite_entre, valeur_entre, code_article, frais_approches, code_br, jour, mois, annee) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                               (code_entre, quantite_entre, valeur_entre, code_article, frais_approches, code_br, jour, mois, annee))
+
+                # Ajouter l'entrée dans la table Entree
+                cursor.execute("INSERT INTO Entree (code_entre, quantite_entre, valeur_entre, frais_approches, code_article, jour, mois, annee, code_br) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                            (code_entre, quantite_entre, valeur_entre, frais_approches, code_article, jour, mois, annee, code_br))
+
+                # Mettre à jour la table Mois
+                cursor.execute("UPDATE Mois SET Solde_finalee_qte = Solde_finalee_qte + ? , Solde_finale_val = Solde_finale_val + ? + ? WHERE Nom_mois = ? AND Code_article = ?",
+                            (quantite_entre, valeur_entre, frais_approches, mois, code_article))
+
                 conn.commit()
+
                 # Ajouter l'entrée au tableau
-                tree.insert("", tk.END, values=(code_entre, quantite_entre, valeur_entre, code_article, frais_approches, code_br, jour, mois, annee))
+                tree.insert("", tk.END, values=(code_entre, quantite_entre, valeur_entre, frais_approches, code_article, jour, mois, annee, code_br))
+
                 # Réinitialiser les champs de saisie après ajout
-                for entry in entries.values():
-                    entry.delete(0, tk.END)
+                entry_code_entre.delete(0, tk.END)
+                entry_quantite_entre.delete(0, tk.END)
+                entry_valeur_entre.delete(0, tk.END)
+                entry_frais_approches.delete(0, tk.END)
+                entry_code_article.delete(0, tk.END)
+                entry_jour.delete(0, tk.END)
+                entry_mois.delete(0, tk.END)
+                entry_annee.delete(0, tk.END)
+                entry_code_br.delete(0, tk.END)
+                   
+
             except sqlite3.IntegrityError:
-                messagebox.showerror("Erreur", "Une entrée avec ce code existe déjà.",parent=afficher_fenetre_entrees)
+                messagebox.showerror("Erreur", "Une entrée avec ce code existe déjà.", parent=fenetre_entrees)
             finally:
                 conn.close()
         else:
-            messagebox.showwarning("Champs manquants", "Veuillez remplir tous les champs.",parent=afficher_fenetre_entrees)
+            messagebox.showwarning("Champs manquants", "Veuillez remplir tous les champs.", parent=fenetre_entrees)
+
 
     # Bouton Ajouter
     btn_ajouter = ttk.Button(frame_ajout, text="Ajouter", command=ajouter_entree)
-    btn_ajouter.grid(row=len(labels_text), column=0, columnspan=2, padx=10, pady=10)
+    btn_ajouter.grid(row=9, column=0, columnspan=2, padx=10, pady=20)
 
     # Fonction pour afficher les entrées dans une nouvelle fenêtre
 def afficher_entrees():
@@ -625,9 +721,218 @@ def afficher_entrees():
     finally:
         conn.close()
 
-##############################    ENTRES ENTRES ENTRES    #########################################################  
+##############################    ENTRES ENTRES ENTRES    ######################################################### #####
+##############################SORTIES SORTIES SORTIES #############################################################
+
+# Fonction pour ouvrir la fenêtre des entrées
+def ouvrir_fenetre_sortie():
+    fenetre_sorties = tk.Toplevel()
+    fenetre_sorties.title("Gestion des Sorties")
+    fenetre_sorties.geometry("800x500")
+    fenetre_sorties.configure(bg="#ffffff")
+
+    # Frame pour les boutons
+    frame_boutons = tk.Frame(fenetre_sorties, bg="#ffffff")
+    frame_boutons.pack(expand=True, padx=20, pady=20)
+
+    # Bouton Consulter entrées
+    btn_consulter = ttk.Button(frame_boutons, text="Consulter sorties", width=20, command=afficher_sorties)
+    btn_consulter.grid(row=0, column=0, padx=10, pady=10)
+
+    # Bouton Ajouter entrée
+    btn_ajouter = ttk.Button(frame_boutons, text="Ajouter sorties", width=20, command=afficher_fenetre_sorties)
+    btn_ajouter.grid(row=0, column=1, padx=10, pady=10)
+
+# Fonction pour afficher les entrées et ajouter une nouvelle entrée
+def afficher_fenetre_sorties():
+    fenetre_sorties = tk.Tk()
+    fenetre_sorties.title("Gestion des Sorties")
+    fenetre_sorties.geometry("1000x600")
+    fenetre_sorties.configure(bg="#ffffff")
+
+    # Tableau pour afficher les données
+    columns = ("code_sortie", "quantite_sortie", "valeur_sortie", "code_article", "bon",  "code_bon")
+    tree = ttk.Treeview(fenetre_sorties, columns=columns, show="headings")
+
+    # Configuration des colonnes du tableau
+    for col in columns:
+        tree.heading(col, text=col.replace("_", " ").capitalize())
+        tree.column(col, width=150)
+
+    conn = sqlite3.connect("comptabilit_matiere.db")
+    cursor = conn.cursor()
+
+    # Charger les données de la base de données
+    cursor.execute("SELECT code_sortie, quantite_sortie, valeur_sortie, bon, code_bon, code_article FROM Sortie")
+    sorties = cursor.fetchall()
+
+    for sortie in sorties:
+        tree.insert("", tk.END, values=sortie)
+
+    tree.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+
+    # Frame pour les champs de saisie et le bouton Ajouter
+    frame_ajout = tk.Frame(fenetre_sorties, bg="#ffffff")
+    frame_ajout.pack(side=tk.BOTTOM, fill=tk.X, padx=10, pady=10)
+
+    # Labels et champs de saisie pour les attributs
+    
+
+    label_code_sortie = ttk.Label(frame_ajout, text="Code Sortie:")
+    label_code_sortie.grid(row=0, column=0, padx=10, pady=5, sticky=tk.W)
+    entry_code_sortie = ttk.Entry(frame_ajout, width=30)
+    entry_code_sortie.grid(row=0, column=1, padx=10, pady=5)
+    
+
+    label_quantite_sortie = ttk.Label(frame_ajout, text="Quantité Sortie:")
+    label_quantite_sortie.grid(row=1, column=0, padx=10, pady=5, sticky=tk.W)
+    entry_quantite_sortie = ttk.Entry(frame_ajout, width=30)
+    entry_quantite_sortie.grid(row=1, column=1, padx=10, pady=5)
+    
+
+    label_valeur_sortie = ttk.Label(frame_ajout, text="Valeur Sortie:")
+    label_valeur_sortie.grid(row=2, column=0, padx=10, pady=5, sticky=tk.W)
+    entry_valeur_sortie = ttk.Entry(frame_ajout, width=30)
+    entry_valeur_sortie.grid(row=2, column=1, padx=10, pady=5)
+    
+
+    cursor.execute("SELECT DISTINCT code_article FROM Article")
+    articles = cursor.fetchall()
+    label_code_article = ttk.Label(frame_ajout, text="Code Article:")
+    label_code_article.grid(row=3, column=0, padx=10, pady=5, sticky=tk.W)
+    entry_code_article = ttk.Combobox(frame_ajout, width=28, values=articles)
+    entry_code_article.grid(row=3, column=1, padx=10, pady=5)
+    
+    values_bon = ["BSM", "BRM", "BRT"]
+
+    label_bon = ttk.Label(frame_ajout, text="Bon :")
+    label_bon.grid(row=4, column=0, padx=10, pady=5, sticky=tk.W)
+    entry_bon = ttk.Combobox(frame_ajout, width=30, values=values_bon)
+    entry_bon.grid(row=4, column=1, padx=10, pady=5)
+    
+    if entry_bon.get() == "BSM" : 
+       cursor.execute("SELECT DISTINCT code_bsm FROM BSM")
+       values_code_bon = cursor.fetchall() 
+
+    else :
+        if  entry_bon.get() == "BRM" : 
+            cursor.execute("SELECT DISTINCT code_brm FROM BRM")
+            values_code_bon = cursor.fetchall()   
+        else :
+            cursor.execute("SELECT DISTINCT code_brt FROM BRT")
+            values_code_bon = cursor.fetchall()
+            
+    label_code_bon = ttk.Label(frame_ajout, text="Code Bon :")
+    label_code_bon.grid(row=5, column=0, padx=10, pady=5, sticky=tk.W)
+    entry_code_bon = ttk.Combobox(frame_ajout, width=30, values=values_code_bon)
+    entry_code_bon.grid(row=5, column=1, padx=10, pady=5)
+    
 
 
+    conn.close()
+
+    # Fonction pour ajouter une entrée à la base de données et au tableau
+    def ajouter_sortie():
+        code_sortie = entry_code_sortie.get()
+        quantite_sortie = entry_quantite_sortie.get()
+        valeur_sortie = entry_valeur_sortie.get()
+        bon = entry_bon.get()
+        code_article = entry_code_article.get()
+        code_bon = entry_code_bon.get()
+
+        if code_sortie and quantite_sortie and valeur_sortie and bon and code_article and code_bon:
+            try:
+                conn = sqlite3.connect("comptabilit_matiere.db")
+                cursor = conn.cursor()
+
+                # Ajouter l'entrée dans la table Entree
+                cursor.execute("INSERT INTO Sortie (code_sortie, quantite_sortie, valeur_sortie, bon, code_bon, code_article) VALUES (?, ?, ?, ?, ?, ?)",
+                            (code_sortie, quantite_sortie, valeur_sortie, bon, code_bon, code_bon))
+                if bon == "BSM" : 
+                    cursor.execute("SELECT mois FROM BSM WHERE Code_bsm = ?", bon)
+                    mois = cursor.fetchone()
+                    # Mettre à jour la table Mois
+                    cursor.execute("UPDATE Mois SET Solde_finalee_qte = Solde_finalee_qte - ? , Solde_finale_val = Solde_finale_val - ? WHERE Nom_mois = ? AND Code_article = ?",
+                                (quantite_sortie, valeur_sortie,  mois, code_article))
+                    cursor.execute("UPDATE magasin SET quantite = quantite - ? , valeur = valeur - ? WHERE  Code_article = ?",
+                                (quantite_sortie, valeur_sortie,  code_article))
+                else:
+                    if bon == "BRM" : 
+                        cursor.execute("SELECT mois FROM BRM WHERE Code_brm = ?", bon)
+                        mois = cursor.fetchone()
+                        # Mettre à jour la table Mois
+                        cursor.execute("UPDATE Mois SET Solde_finalee_qte = Solde_finalee_qte + ? , Solde_finale_val = Solde_finale_val + ? WHERE Nom_mois = ? AND Code_article = ?",
+                                (quantite_sortie, valeur_sortie,  mois, code_article))
+                        cursor.execute("UPDATE magasin SET quantite = quantite + ? , valeur = valeur + ? WHERE  Code_article = ?",
+                                (quantite_sortie, valeur_sortie,  code_article))
+                    else :
+                        cursor.execute("SELECT mois FROM BRT WHERE Code_brt = ?", bon)
+                        mois = cursor.fetchone()
+                        # Mettre à jour la table Mois
+                        cursor.execute("UPDATE Mois SET Solde_finalee_qte = Solde_finalee_qte - ? , Solde_finale_val = Solde_finale_val - ? WHERE Nom_mois = ? AND Code_article = ?",
+                                (quantite_sortie, valeur_sortie,  mois, code_article))
+                        cursor.execute("UPDATE magasin SET quantite = quantite - ? , valeur = valeur - ? WHERE  Code_article = ?",
+                                (quantite_sortie, valeur_sortie,  code_article))
+                        cursor.execute("UPDATE stockRBT SET quantite = quantite + ? , valeur = valeur + ? WHERE  Code_article = ?",
+                                (quantite_sortie, valeur_sortie,  code_article))
+
+                conn.commit()
+
+                # Ajouter l'entrée au tableau
+                tree.insert("", tk.END, values=(code_sortie, quantite_sortie, valeur_sortie,  code_article, bon, code_bon))
+
+                # Réinitialiser les champs de saisie après ajout
+                entry_code_sortie.delete(0, tk.END)
+                entry_quantite_sortie.delete(0, tk.END)
+                entry_valeur_sortie.delete(0, tk.END)
+                entry_bon.delete(0, tk.END)
+                entry_code_article.delete(0, tk.END)
+                entry_code_bon.delete(0, tk.END)
+                   
+
+            except sqlite3.IntegrityError:
+                messagebox.showerror("Erreur", "Une sortie avec ce code existe déjà.", parent=fenetre_sorties)
+            finally:
+                conn.close()
+        else:
+            messagebox.showwarning("Champs manquants", "Veuillez remplir tous les champs.", parent=fenetre_sorties)
+
+    btn_ajouter = ttk.Button(frame_ajout, text="Ajouter", command= ajouter_sortie)
+    btn_ajouter.grid(row=9, column=0, columnspan=2, padx=10, pady=20)
+
+    # Fonction pour afficher les entrées dans une nouvelle fenêtre
+def afficher_sorties():
+    fenetre_consulter = tk.Toplevel()
+    fenetre_consulter.title("Consulter les Sorties")
+    fenetre_consulter.geometry("800x500")
+    fenetre_consulter.configure(bg="#ffffff")
+
+    # Configuration du tableau
+    columns = ("Code Sortie", "Quantité Sorties", "Valeur Sortie", "Code Article", "Bon", "Code Bon")
+    tree = ttk.Treeview(fenetre_consulter, columns=columns, show="headings", height=10)
+
+    for col in columns:
+        tree.heading(col, text=col)
+        tree.column(col, width=100)
+
+    tree.pack(expand=True, fill=tk.BOTH)
+
+    # Récupération des données de la base de données
+    try:
+        conn = sqlite3.connect("comptabilit_matiere.db")
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM Sortie")
+        for row in cursor.fetchall():
+            tree.insert("", tk.END, values=row)
+    except Exception as e:
+        messagebox.showerror("Erreur", str(e), parent=fenetre_consulter)
+    finally:
+        conn.close()
+
+
+
+
+##############################SORTIES SORTIES SORTIES ##############################################################
 ##############################    BON    BON     BON     #########################################
 # BSM  BRT  BRM 
 def ouvrir_fenetre_bon():
@@ -1086,7 +1391,39 @@ def ouvrir_fenetre_brm():
     consulter_brm_btn.pack(pady=10)
 
 ############################### BON    BON     BON    #####################################################
-############################################################################################################
+############################### MAGASIN  MAGASIN MAGASIN ##################################################################
+def consulter_magasin():
+    # Connexion à la base de données
+    conn = sqlite3.connect('comptabilit_matiere.db')
+    cursor = conn.cursor()
+    
+    # Création de la fenêtre
+    fenetre_magasin = tk.Toplevel()
+    fenetre_magasin.title("Données du Magasin")
+    fenetre_magasin.geometry("800x400")
+    fenetre_magasin.configure(bg="#ffffff")
+    
+    # Création du tableau
+    columns = ("Code Article", "Quantité", "Valeur", "Jour", "Mois", "Année")
+    tree = ttk.Treeview(fenetre_magasin, columns=columns, show="headings", height=15)
+    
+    # Configuration des colonnes du tableau
+    for col in columns:
+        tree.heading(col, text=col)
+        tree.column(col, anchor=tk.CENTER)
+    
+    tree.pack(expand=True, fill=tk.BOTH, padx=20, pady=20)
+
+    # Récupération des données de la table magasin
+    cursor.execute("SELECT code_article, quantite, valeur, jour, mois, annee FROM magasin")
+    rows = cursor.fetchall()
+    
+    # Insertion des données dans le tableau
+    for row in rows:
+        tree.insert("", tk.END, values=row)
+    
+    conn.close()
+##################################################################################################
 # Création de la fenêtre de connexion
 fenetre_connexion = tk.Tk()
 fenetre_connexion.title("Connexion")
