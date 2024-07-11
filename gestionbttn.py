@@ -662,6 +662,12 @@ def afficher_fenetre_entrees():
                 # Mettre à jour la table Mois
                 cursor.execute("UPDATE Mois SET Solde_finalee_qte = Solde_finalee_qte + ? , Solde_finale_val = Solde_finale_val + ? + ? WHERE Nom_mois = ? AND Code_article = ?",
                             (quantite_entre, valeur_entre, frais_approches, mois, code_article))
+                cursor.execute("SELECT Solde_finale_val FROM Mois where code_article = ?", code_article)
+                solde_finale_val = cursor.fetchone()
+                cursor.execute("SELECT Solde_finalee_qte FROM Mois where code_article = ?", code_article)
+                solde_finale_qte = cursor.fetchone()
+
+                cursor.execute("UPDATE Mois SET CMP = (?+?+?)/(?+?)",(solde_finale_val, valeur_entre, frais_approches, solde_finale_qte, quantite_entre))
 
                 conn.commit()
 
@@ -835,19 +841,24 @@ def afficher_fenetre_sorties():
     def ajouter_sortie():
         code_sortie = entry_code_sortie.get()
         quantite_sortie = entry_quantite_sortie.get()
-        valeur_sortie = entry_valeur_sortie.get()
+        # valeur_sortie = entry_valeur_sortie.get()
         bon = entry_bon.get()
         code_article = entry_code_article.get()
         code_bon = entry_code_bon.get()
+        
 
-        if code_sortie and quantite_sortie and valeur_sortie and bon and code_article and code_bon:
+        if code_sortie and quantite_sortie and bon and code_article and code_bon:
             try:
                 conn = sqlite3.connect("comptabilit_matiere.db")
                 cursor = conn.cursor()
 
+                cursor("SELECT CMP FROM Mois WHERE code_article = ?", code_article)
+                valeur_sortie = cursor.fetchone()
+
+
                 # Ajouter l'entrée dans la table Entree
-                cursor.execute("INSERT INTO Sortie (code_sortie, quantite_sortie, valeur_sortie, bon, code_bon, code_article) VALUES (?, ?, ?, ?, ?, ?)",
-                            (code_sortie, quantite_sortie, valeur_sortie, bon, code_bon, code_bon))
+                cursor.execute("INSERT INTO Sortie (code_sortie, quantite_sortie, valeur_sortie,  bon, code_bon, code_article) VALUES (?, ?, ?, ?, ?, ?)",
+                            (code_sortie, quantite_sortie, valeur_sortie, bon, code_bon, code_article))
                 if bon == "BSM" : 
                     cursor.execute("SELECT mois FROM BSM WHERE Code_bsm = ?", bon)
                     mois = cursor.fetchone()
